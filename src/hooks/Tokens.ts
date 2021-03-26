@@ -19,26 +19,28 @@ function useTokensFromMap(tokenMap: TokenAddressMap, includeUserAdded: boolean):
 
   return useMemo(() => {
     if (!chainId) return {}
+    const tokensMap = chainId === 13 || chainId === 1337 ? {} : tokenMap[chainId]
 
     // reduce to just tokens
-    const mapWithoutUrls = Object.keys(tokenMap[chainId]).reduce<{ [address: string]: Token }>((newMap, address) => {
-      newMap[address] = tokenMap[chainId][address].token
-      return newMap
-    }, {})
+    const mapWithoutUrls = Object.keys(tokensMap)
+        .reduce<{ [address: string]: Token }>((newMap, address) => {
+          newMap[address] = tokenMap[chainId][address].token
+          return newMap
+        }, {})
 
     if (includeUserAdded) {
       return (
-        userAddedTokens
-          // reduce into all ALL_TOKENS filtered by the current chain
-          .reduce<{ [address: string]: Token }>(
-            (tokenMap, token) => {
-              tokenMap[token.address] = token
-              return tokenMap
-            },
-            // must make a copy because reduce modifies the map, and we do not
-            // want to make a copy in every iteration
-            { ...mapWithoutUrls }
-          )
+          userAddedTokens
+              // reduce into all ALL_TOKENS filtered by the current chain
+              .reduce<{ [address: string]: Token }>(
+                  (tokenMap, token) => {
+                    tokenMap[token.address] = token
+                    return tokenMap
+                  },
+                  // must make a copy because reduce modifies the map, and we do not
+                  // want to make a copy in every iteration
+                  { ...mapWithoutUrls }
+              )
       )
     }
 
@@ -64,13 +66,13 @@ export function useAllInactiveTokens(): { [address: string]: Token } {
   // filter out any token that are on active list
   const activeTokensAddresses = Object.keys(useAllTokens())
   const filteredInactive = activeTokensAddresses
-    ? Object.keys(inactiveTokens).reduce<{ [address: string]: Token }>((newMap, address) => {
+      ? Object.keys(inactiveTokens).reduce<{ [address: string]: Token }>((newMap, address) => {
         if (!activeTokensAddresses.includes(address)) {
           newMap[address] = inactiveTokens[address]
         }
         return newMap
       }, {})
-    : inactiveTokens
+      : inactiveTokens
 
   return filteredInactive
 }
@@ -121,11 +123,11 @@ const BYTES32_REGEX = /^0x[a-fA-F0-9]{64}$/
 
 function parseStringOrBytes32(str: string | undefined, bytes32: string | undefined, defaultValue: string): string {
   return str && str.length > 0
-    ? str
-    : // need to check for proper bytes string and valid terminator
-    bytes32 && BYTES32_REGEX.test(bytes32) && arrayify(bytes32)[31] === 0
-    ? parseBytes32String(bytes32)
-    : defaultValue
+      ? str
+      : // need to check for proper bytes string and valid terminator
+      bytes32 && BYTES32_REGEX.test(bytes32) && arrayify(bytes32)[31] === 0
+          ? parseBytes32String(bytes32)
+          : defaultValue
 }
 
 // undefined if invalid or does not exist
@@ -143,10 +145,10 @@ export function useToken(tokenAddress?: string): Token | undefined | null {
 
   const tokenName = useSingleCallResult(token ? undefined : tokenContract, 'name', undefined, NEVER_RELOAD)
   const tokenNameBytes32 = useSingleCallResult(
-    token ? undefined : tokenContractBytes32,
-    'name',
-    undefined,
-    NEVER_RELOAD
+      token ? undefined : tokenContractBytes32,
+      'name',
+      undefined,
+      NEVER_RELOAD
   )
   const symbol = useSingleCallResult(token ? undefined : tokenContract, 'symbol', undefined, NEVER_RELOAD)
   const symbolBytes32 = useSingleCallResult(token ? undefined : tokenContractBytes32, 'symbol', undefined, NEVER_RELOAD)
@@ -158,11 +160,11 @@ export function useToken(tokenAddress?: string): Token | undefined | null {
     if (decimals.loading || symbol.loading || tokenName.loading) return null
     if (decimals.result) {
       return new Token(
-        chainId,
-        address,
-        decimals.result[0],
-        parseStringOrBytes32(symbol.result?.[0], symbolBytes32.result?.[0], 'UNKNOWN'),
-        parseStringOrBytes32(tokenName.result?.[0], tokenNameBytes32.result?.[0], 'Unknown Token')
+          chainId,
+          address,
+          decimals.result[0],
+          parseStringOrBytes32(symbol.result?.[0], symbolBytes32.result?.[0], 'UNKNOWN'),
+          parseStringOrBytes32(tokenName.result?.[0], tokenNameBytes32.result?.[0], 'Unknown Token')
       )
     }
     return undefined

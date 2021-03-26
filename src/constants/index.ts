@@ -1,11 +1,21 @@
-import { ChainId, JSBI, Percent, Token, WETH } from '@uniswap/sdk'
-import { AbstractConnector } from '@web3-react/abstract-connector'
+import {JSBI, Percent, ChainId, Token, WETH} from '@uniswap/sdk'
+import {AbstractConnector} from '@web3-react/abstract-connector'
 
-import { fortmatic, injected, portis, walletconnect, walletlink } from '../connectors'
+import {fortmatic, injected, portis, walletconnect, walletlink} from '../connectors'
+// 13
+export const ROUTER_ADDRESS = '0xF8cef78E923919054037a1D03662bBD884fF4edf'
+export const FACTORY_ADDRESS = '0x42e2EE7Ba8975c473157634Ac2AF4098190fc741'
+// 1337
+// export const ROUTER_ADDRESS = '0x87c9812CF8eDE6066942C7Acec892a6959927D34'
+// export const FACTORY_ADDRESS = '0x3724c8ee7ACff2D88fe891A337F5Ad84c3EBc0eB'
 
-export const ROUTER_ADDRESS = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D'
 
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
+
+export const GENESIS_ACCOUNT = '0x6Be02d1d3665660d22FF9624b7BE0551ee1Ac91b'
+export const GENESIS_PRIVATE_KEY = '0x99B3C12287537E38C90A9219D4CB074A89A16E9CDB20BF85728EBD97C343E342'
+export const erc20Address = '0xC2Bf5F29a4384b1aB0C063e1c666f02121B6084a'
+export const wethAddress = '0x5c4242beB94dE30b922f57241f1D02f36e906915'
 
 export { PRELOADED_PROPOSALS } from './proposals'
 
@@ -21,6 +31,26 @@ export const COMP = new Token(ChainId.MAINNET, '0xc00e94Cb662C3520282E6f57172140
 export const MKR = new Token(ChainId.MAINNET, '0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2', 18, 'MKR', 'Maker')
 export const AMPL = new Token(ChainId.MAINNET, '0xD46bA6D942050d489DBd938a2C909A5d5039A161', 9, 'AMPL', 'Ampleforth')
 export const WBTC = new Token(ChainId.MAINNET, '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', 8, 'WBTC', 'Wrapped BTC')
+
+
+export const ERC20 = [
+  // new Token(1337, '0xe409c77fB941B557B34a902e51405658E9aA4a8B', 18, 'PKF', 'Polkafoundry'),
+  // new Token(1337, '0xfB1169F3946DC50FBb70A0e13172EaDe323b1c1a', 18, 'TEST', 'TEST Coin')
+  new Token(13, '0xC2Bf5F29a4384b1aB0C063e1c666f02121B6084a', 18, 'PKF', 'Polkafoundry'),
+  new Token(13, '0xBb0CC0fb3e0c06725c67167501f850B4900D6DB5', 18, 'TEA', 'Tea Coin')
+]
+export const fixedPairAddress = '0xBD6DC64A08bE60299Ba17958d8C9fD1423a4409D'
+
+export const WETH_TEST = {
+  [ChainId.MAINNET]: WETH[ChainId.MAINNET],
+  [ChainId.RINKEBY]: WETH[ChainId.RINKEBY],
+  [ChainId.ROPSTEN]: WETH[ChainId.ROPSTEN],
+  [ChainId.GÖRLI]: WETH[ChainId.GÖRLI],
+  [ChainId.KOVAN]: WETH[ChainId.KOVAN],
+  13: new Token(13, '0x5c4242beB94dE30b922f57241f1D02f36e906915', 18, 'WETH', 'Wrapped Ether'),
+  1337: new Token(1337, '0xefd866FA637c6ec1E36CC3DA8A32b2b4a206A40F', 18, 'WETH', 'Wrapped Ether')
+}
+
 
 // Block time here is slightly higher (~1s) than average in order to avoid ongoing proposals past the displayed time
 export const AVERAGE_BLOCK_TIME_IN_SECS = 13
@@ -56,7 +86,7 @@ const WETH_ONLY: ChainTokenList = {
   [ChainId.ROPSTEN]: [WETH[ChainId.ROPSTEN]],
   [ChainId.RINKEBY]: [WETH[ChainId.RINKEBY]],
   [ChainId.GÖRLI]: [WETH[ChainId.GÖRLI]],
-  [ChainId.KOVAN]: [WETH[ChainId.KOVAN]]
+  [ChainId.KOVAN]: [WETH[ChainId.KOVAN]],
 }
 
 // used to construct intermediary pairs for trading
@@ -210,5 +240,6 @@ export const BLOCKED_ADDRESSES: string[] = [
   '0x7F367cC41522cE07553e823bf3be79A889DEbe1B',
   '0xd882cFc20F52f2599D84b8e8D58C7FB62cfE344b',
   '0x901bb9583b24D97e995513C6778dc6888AB6870e',
-  '0xA7e5d5A720f06526557c513402f2e6B5fA20b008'
+  '0xA7e5d5A720f06526557c513402f2e6B5fA20b008',
+  '0x8576aCC5C05D6Ce88f4e49bf65BdF0C62F91353C'
 ]

@@ -6,6 +6,7 @@ import { useActiveWeb3React } from '../hooks'
 
 import { useMultipleContractSingleData } from '../state/multicall/hooks'
 import { wrappedCurrency } from '../utils/wrappedCurrency'
+import {ERC20, fixedPairAddress } from "../constants"
 
 const PAIR_INTERFACE = new Interface(IUniswapV2PairABI)
 
@@ -31,6 +32,9 @@ export function usePairs(currencies: [Currency | undefined, Currency | undefined
   const pairAddresses = useMemo(
     () =>
       tokens.map(([tokenA, tokenB]) => {
+        if((tokenA?.address  === ERC20[0]?.address  && tokenB?.address  === ERC20[1]?.address )
+            || (tokenA?.address  === ERC20[1]?.address  && tokenB?.address  === ERC20[0]?.address ))
+          return fixedPairAddress
         return tokenA && tokenB && !tokenA.equals(tokenB) ? Pair.getAddress(tokenA, tokenB) : undefined
       }),
     [tokens]

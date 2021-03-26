@@ -1,9 +1,13 @@
-import { BigNumber } from '@ethersproject/bignumber'
-import { TransactionResponse } from '@ethersproject/providers'
-import { Currency, currencyEquals, ETHER, TokenAmount, WETH } from '@uniswap/sdk'
-import React, { useCallback, useContext, useState } from 'react'
+// import { BigNumber } from '@ethersproject/bignumber'
+// import { TransactionResponse } from '@ethersproject/providers'
+import {
+  Currency, currencyEquals,
+  ETHER,
+  TokenAmount, WETH
+} from '@uniswap/sdk'
+import React, {useCallback, useContext, useState} from 'react'
 import { Plus } from 'react-feather'
-import ReactGA from 'react-ga'
+// import ReactGA from 'react-ga'
 import { RouteComponentProps } from 'react-router-dom'
 import { Text } from 'rebass'
 import { ThemeContext } from 'styled-components'
@@ -27,10 +31,14 @@ import { useWalletModalToggle } from '../../state/application/hooks'
 import { Field } from '../../state/mint/actions'
 import { useDerivedMintInfo, useMintActionHandlers, useMintState } from '../../state/mint/hooks'
 
-import { useTransactionAdder } from '../../state/transactions/hooks'
+// import { useTransactionAdder } from '../../state/transactions/hooks'
 import { useIsExpertMode, useUserSlippageTolerance } from '../../state/user/hooks'
 import { TYPE } from '../../theme'
-import { calculateGasMargin, calculateSlippageAmount, getRouterContract } from '../../utils'
+import {
+  // calculateGasMargin,
+  calculateSlippageAmount
+  ,getRouterContract
+} from '../../utils'
 import { maxAmountSpend } from '../../utils/maxAmountSpend'
 import { wrappedCurrency } from '../../utils/wrappedCurrency'
 import AppBody from '../AppBody'
@@ -40,6 +48,8 @@ import { currencyId } from '../../utils/currencyId'
 import { PoolPriceBar } from './PoolPriceBar'
 import { useIsTransactionUnsupported } from 'hooks/Trades'
 import UnsupportedCurrencyFooter from 'components/swap/UnsupportedCurrencyFooter'
+import {useRouterContract, useV2FactoryContract} from "../../hooks/useContract";
+import Web3 from "web3";
 
 export default function AddLiquidity({
   match: {
@@ -123,11 +133,17 @@ export default function AddLiquidity({
   const [approvalA, approveACallback] = useApproveCallback(parsedAmounts[Field.CURRENCY_A], ROUTER_ADDRESS)
   const [approvalB, approveBCallback] = useApproveCallback(parsedAmounts[Field.CURRENCY_B], ROUTER_ADDRESS)
 
-  const addTransaction = useTransactionAdder()
+  // const addTransaction = useTransactionAdder()
+  const routerContract = useRouterContract()
+  const web3 = new Web3(Web3.givenProvider);
+  const factoryContract = useV2FactoryContract()
 
   async function onAdd() {
     if (!chainId || !library || !account) return
     const router = getRouterContract(chainId, library, account)
+    console.log(router)
+    const gasLimit = (await web3.eth.getBlock("latest")).gasLimit;
+    console.log('gas limit: ', gasLimit)
 
     const { [Field.CURRENCY_A]: parsedAmountA, [Field.CURRENCY_B]: parsedAmountB } = parsedAmounts
     if (!parsedAmountA || !parsedAmountB || !currencyA || !currencyB || !deadline) {
@@ -138,77 +154,142 @@ export default function AddLiquidity({
       [Field.CURRENCY_A]: calculateSlippageAmount(parsedAmountA, noLiquidity ? 0 : allowedSlippage)[0],
       [Field.CURRENCY_B]: calculateSlippageAmount(parsedAmountB, noLiquidity ? 0 : allowedSlippage)[0]
     }
+    setAttemptingTxn(true)
 
-    let estimate,
-      method: (...args: any) => Promise<TransactionResponse>,
-      args: Array<string | string[] | number>,
-      value: BigNumber | null
-    if (currencyA === ETHER || currencyB === ETHER) {
-      const tokenBIsETH = currencyB === ETHER
-      estimate = router.estimateGas.addLiquidityETH
-      method = router.addLiquidityETH
-      args = [
-        wrappedCurrency(tokenBIsETH ? currencyA : currencyB, chainId)?.address ?? '', // token
-        (tokenBIsETH ? parsedAmountA : parsedAmountB).raw.toString(), // token desired
-        amountsMin[tokenBIsETH ? Field.CURRENCY_A : Field.CURRENCY_B].toString(), // token min
-        amountsMin[tokenBIsETH ? Field.CURRENCY_B : Field.CURRENCY_A].toString(), // eth min
-        account,
-        deadline.toHexString()
-      ]
-      value = BigNumber.from((tokenBIsETH ? parsedAmountB : parsedAmountA).raw.toString())
+    if(currencyA === ETHER || currencyB === ETHER) {
+      const tokenAisEther = currencyA === ETHER
+      web3.eth.sendTransaction({
+        from: account?.toString(),
+        to: ROUTER_ADDRESS,
+        data: await routerContract.methods.addLiquidityETH(
+            tokenAisEther ? wrappedCurrency(currencyB, chainId)?.address : wrappedCurrency(currencyA, chainId)?.address,
+            tokenAisEther ? parsedAmountB.raw.toString() : parsedAmountA.raw.toString(),
+            tokenAisEther ? amountsMin[Field.CURRENCY_B].toString() : amountsMin[Field.CURRENCY_A].toString(),
+            tokenAisEther ? amountsMin[Field.CURRENCY_A].toString() : amountsMin[Field.CURRENCY_B].toString(),
+            account?.toString(),
+            '2000000000'
+        ).encodeABI(),
+        value: (10 ** 18).toString(),
+        gasPrice: '0x01',
+        gas: gasLimit,
+      }).on('transactionHash', (transactionHash) => {
+        setAttemptingTxn(false)
+        setTxHash(transactionHash)
+      }).on('error', (err) => {
+        console.error(err)
+      })
     } else {
-      estimate = router.estimateGas.addLiquidity
-      method = router.addLiquidity
-      args = [
-        wrappedCurrency(currencyA, chainId)?.address ?? '',
-        wrappedCurrency(currencyB, chainId)?.address ?? '',
-        parsedAmountA.raw.toString(),
-        parsedAmountB.raw.toString(),
-        amountsMin[Field.CURRENCY_A].toString(),
-        amountsMin[Field.CURRENCY_B].toString(),
-        account,
-        deadline.toHexString()
-      ]
-      value = null
+      web3.eth.sendTransaction({
+        from: account?.toString(),
+        to: ROUTER_ADDRESS,
+        data: await routerContract.methods.addLiquidity(
+            wrappedCurrency(currencyA, chainId)?.address,
+            wrappedCurrency(currencyB, chainId)?.address,
+            parsedAmountA.raw.toString(),
+            parsedAmountB.raw.toString(),
+            amountsMin[Field.CURRENCY_A].toString(),
+            amountsMin[Field.CURRENCY_B].toString(),
+            account?.toString(),
+            '2000000000'
+        ).encodeABI(),
+        value: '0x00',
+        gasPrice: '0x01',
+        gas: gasLimit,
+      }).on('transactionHash', (transactionHash) => {
+        console.log('hash: ', transactionHash)
+        setAttemptingTxn(false)
+        setTxHash(transactionHash)
+        onShow().then(res => {
+          console.log(res)
+        })
+      }).on('error', (err) => {
+        console.error(err)
+      })
     }
 
-    setAttemptingTxn(true)
-    await estimate(...args, value ? { value } : {})
-      .then(estimatedGasLimit =>
-        method(...args, {
-          ...(value ? { value } : {}),
-          gasLimit: calculateGasMargin(estimatedGasLimit)
-        }).then(response => {
-          setAttemptingTxn(false)
+    // let estimate,
+    //   method: (...args: any) => Promise<TransactionResponse>,
+    //   args: Array<string | string[] | number>,
+    //   value: BigNumber | null
+    // if (currencyA === ETHER || currencyB === ETHER) {
+    //   const tokenBIsETH = currencyB === ETHER
+    //   estimate = router.estimateGas.addLiquidityETH
+    //   method = router.addLiquidityETH
+    //   args = [
+    //     wrappedCurrency(tokenBIsETH ? currencyA : currencyB, chainId)?.address ?? '', // token
+    //     (tokenBIsETH ? parsedAmountA : parsedAmountB).raw.toString(), // token desired
+    //     amountsMin[tokenBIsETH ? Field.CURRENCY_A : Field.CURRENCY_B].toString(), // token min
+    //     amountsMin[tokenBIsETH ? Field.CURRENCY_B : Field.CURRENCY_A].toString(), // eth min
+    //     account,
+    //     deadline.toHexString()
+    //   ]
+    //   value = BigNumber.from((tokenBIsETH ? parsedAmountB : parsedAmountA).raw.toString())
+    // } else {
+    //   console.log('2 currency')
+    //   estimate = router.estimateGas.addLiquidity
+    //   method = router.addLiquidity
+    //   args = [
+    //     wrappedCurrency(currencyA, chainId)?.address ?? '',
+    //     wrappedCurrency(currencyB, chainId)?.address ?? '',
+    //     parsedAmountA.raw.toString(),
+    //     parsedAmountB.raw.toString(),
+    //     amountsMin[Field.CURRENCY_A].toString(),
+    //     amountsMin[Field.CURRENCY_B].toString(),
+    //     account,
+    //     deadline.toHexString()
+    //   ]
+    //   value = null
+    // }
+    //
+    // setAttemptingTxn(true)
+    // await estimate(...args, value ? { value } : {})
+    //   .then(estimatedGasLimit =>
+    //     method(...args, {
+    //       ...(value ? { value } : {}),
+    //       gasLimit: calculateGasMargin(estimatedGasLimit)
+    //     }).then(response => {
+    //       setAttemptingTxn(false)
+    //
+    //       addTransaction(response, {
+    //         summary:
+    //           'Add ' +
+    //           parsedAmounts[Field.CURRENCY_A]?.toSignificant(3) +
+    //           ' ' +
+    //           currencies[Field.CURRENCY_A]?.symbol +
+    //           ' and ' +
+    //           parsedAmounts[Field.CURRENCY_B]?.toSignificant(3) +
+    //           ' ' +
+    //           currencies[Field.CURRENCY_B]?.symbol
+    //       })
+    //
+    //       setTxHash(response.hash)
+    //
+    //       ReactGA.event({
+    //         category: 'Liquidity',
+    //         action: 'Add',
+    //         label: [currencies[Field.CURRENCY_A]?.symbol, currencies[Field.CURRENCY_B]?.symbol].join('/')
+    //       })
+    //     })
+    //   )
+    //   .catch(error => {
+    //     setAttemptingTxn(false)
+    //     // we only care if the error is something _other_ than the user rejected the tx
+    //     if (error?.code !== 4001) {
+    //       console.error(error)
+    //     }
+    //   })
+  }
 
-          addTransaction(response, {
-            summary:
-              'Add ' +
-              parsedAmounts[Field.CURRENCY_A]?.toSignificant(3) +
-              ' ' +
-              currencies[Field.CURRENCY_A]?.symbol +
-              ' and ' +
-              parsedAmounts[Field.CURRENCY_B]?.toSignificant(3) +
-              ' ' +
-              currencies[Field.CURRENCY_B]?.symbol
-          })
-
-          setTxHash(response.hash)
-
-          ReactGA.event({
-            category: 'Liquidity',
-            action: 'Add',
-            label: [currencies[Field.CURRENCY_A]?.symbol, currencies[Field.CURRENCY_B]?.symbol].join('/')
-          })
-        })
-      )
-      .catch(error => {
-        setAttemptingTxn(false)
-        // we only care if the error is something _other_ than the user rejected the tx
-        if (error?.code !== 4001) {
-          console.error(error)
-        }
-      })
+  async function onShow() {
+    const pair = await factoryContract.methods.getPair(
+        wrappedCurrency(currencyA || undefined, chainId)?.address,
+        wrappedCurrency(currencyB || undefined, chainId)?.address
+    ).call();
+    console.log('pair', pair)
+    const UniswapV2Pair = require('@uniswap/v2-core/build/UniswapV2Pair.json');
+    const pairContract = new web3.eth.Contract(UniswapV2Pair.abi, pair);
+    const reserves = await pairContract.methods.getReserves().call();
+    console.log('reserves', reserves)
   }
 
   const modalHeader = () => {

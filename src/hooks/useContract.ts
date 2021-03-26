@@ -6,7 +6,7 @@ import { abi as MERKLE_DISTRIBUTOR_ABI } from '@uniswap/merkle-distributor/build
 import { ChainId, WETH } from '@uniswap/sdk'
 import { abi as IUniswapV2PairABI } from '@uniswap/v2-core/build/IUniswapV2Pair.json'
 import { useMemo } from 'react'
-import { GOVERNANCE_ADDRESS, MERKLE_DISTRIBUTOR_ADDRESS, UNI } from '../constants'
+import {GOVERNANCE_ADDRESS, MERKLE_DISTRIBUTOR_ADDRESS, ROUTER_ADDRESS, UNI, ZERO_ADDRESS} from '../constants'
 import {
   ARGENT_WALLET_DETECTOR_ABI,
   ARGENT_WALLET_DETECTOR_MAINNET_ADDRESS
@@ -18,10 +18,13 @@ import ERC20_ABI from '../constants/abis/erc20.json'
 import { MIGRATOR_ABI, MIGRATOR_ADDRESS } from '../constants/abis/migrator'
 import UNISOCKS_ABI from '../constants/abis/unisocks.json'
 import WETH_ABI from '../constants/abis/weth.json'
-import { MULTICALL_ABI, MULTICALL_NETWORKS } from '../constants/multicall'
+import { MULTICALL_ABI, MULTICALL_NETWORKS, MULTICALL_TEST } from '../constants/multicall'
 import { V1_EXCHANGE_ABI, V1_FACTORY_ABI, V1_FACTORY_ADDRESSES } from '../constants/v1'
 import { getContract } from '../utils'
 import { useActiveWeb3React } from './index'
+
+import { FACTORY_ADDRESS } from '../constants/index';
+import Web3 from "web3";
 
 // returns null on errors
 function useContract(address: string | undefined, ABI: any, withSignerIfPossible = true): Contract | null {
@@ -36,6 +39,18 @@ function useContract(address: string | undefined, ABI: any, withSignerIfPossible
       return null
     }
   }, [address, ABI, library, withSignerIfPossible, account])
+}
+
+export function useV2FactoryContract(): any {
+  const web3 = new Web3(Web3.givenProvider);
+  const UniswapV2Factory = require('@uniswap/v2-core/build/UniswapV2Factory.json');
+  return new web3.eth.Contract(UniswapV2Factory.abi, FACTORY_ADDRESS);
+}
+
+export function useRouterContract(): any {
+  const web3 = new Web3(Web3.givenProvider);
+  const UniswapV2Router = require('@uniswap/v2-periphery/build/UniswapV2Router02.json');
+  return new web3.eth.Contract(UniswapV2Router.abi, ROUTER_ADDRESS)
 }
 
 export function useV1FactoryContract(): Contract | null {
@@ -57,15 +72,15 @@ export function useTokenContract(tokenAddress?: string, withSignerIfPossible?: b
 
 export function useWETHContract(withSignerIfPossible?: boolean): Contract | null {
   const { chainId } = useActiveWeb3React()
-  return useContract(chainId ? WETH[chainId].address : undefined, WETH_ABI, withSignerIfPossible)
+  return useContract(chainId ? WETH[chainId]?.address : undefined, WETH_ABI, withSignerIfPossible)
 }
 
 export function useArgentWalletDetectorContract(): Contract | null {
   const { chainId } = useActiveWeb3React()
   return useContract(
-    chainId === ChainId.MAINNET ? ARGENT_WALLET_DETECTOR_MAINNET_ADDRESS : undefined,
-    ARGENT_WALLET_DETECTOR_ABI,
-    false
+      chainId === ChainId.MAINNET ? ARGENT_WALLET_DETECTOR_MAINNET_ADDRESS : undefined,
+      ARGENT_WALLET_DETECTOR_ABI,
+      false
   )
 }
 
@@ -99,7 +114,15 @@ export function usePairContract(pairAddress?: string, withSignerIfPossible?: boo
 
 export function useMulticallContract(): Contract | null {
   const { chainId } = useActiveWeb3React()
-  return useContract(chainId && MULTICALL_NETWORKS[chainId], MULTICALL_ABI, false)
+  let address = ZERO_ADDRESS
+  if(chainId && MULTICALL_NETWORKS[chainId]) {
+    address = MULTICALL_NETWORKS[chainId]
+  } else if (chainId === 13) {
+    address = MULTICALL_TEST[13]
+  } else if (chainId === 1337) {
+    address = MULTICALL_TEST[1337]
+  }
+  return useContract(address, MULTICALL_ABI, false)
 }
 
 export function useMerkleDistributorContract(): Contract | null {
@@ -123,8 +146,8 @@ export function useStakingContract(stakingAddress?: string, withSignerIfPossible
 export function useSocksController(): Contract | null {
   const { chainId } = useActiveWeb3React()
   return useContract(
-    chainId === ChainId.MAINNET ? '0x65770b5283117639760beA3F867b69b3697a91dd' : undefined,
-    UNISOCKS_ABI,
-    false
+      chainId === ChainId.MAINNET ? '0x65770b5283117639760beA3F867b69b3697a91dd' : undefined,
+      UNISOCKS_ABI,
+      false
   )
 }
