@@ -2,10 +2,10 @@ import { BigNumber } from '@ethersproject/bignumber'
 import { Contract } from '@ethersproject/contracts'
 import { JSBI, Percent, Router, SwapParameters, Trade, TradeType } from '@uniswap/sdk'
 import { useMemo } from 'react'
-import { BIPS_BASE, INITIAL_ALLOWED_SLIPPAGE } from '../constants'
+import { BIPS_BASE, INITIAL_ALLOWED_SLIPPAGE, ROUTER_ADDRESS } from '../constants'
 import { getTradeVersion, useV1TradeExchangeAddress } from '../data/V1'
 import { useTransactionAdder } from '../state/transactions/hooks'
-import { calculateGasMargin, getRouterContract, isAddress, shortenAddress } from '../utils'
+import { getRouterContract, isAddress, shortenAddress } from '../utils'
 import isZero from '../utils/isZero'
 import v1SwapArguments from '../utils/v1SwapArguments'
 import { useActiveWeb3React } from './index'
@@ -13,6 +13,13 @@ import { useV1ExchangeContract } from './useContract'
 import useTransactionDeadline from './useTransactionDeadline'
 import useENS from './useENS'
 import { Version } from './useToggledVersion'
+import Web3 from 'web3'
+import UniswapRouter02 from '@uniswap/v2-periphery/build/UniswapV2Router02.json'
+
+const web3 = new Web3(`http://54.169.215.160:9933`)
+// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+// @ts-ignore
+const router02contract = new web3.eth.Contract(UniswapRouter02.abi, ROUTER_ADDRESS)
 
 export enum SwapCallbackState {
   INVALID,
@@ -192,17 +199,33 @@ export function useSwapCallback(
 
         const {
           call: {
-            contract,
+            // contract,
             parameters: { methodName, args, value }
           },
-          gasEstimate
+          // gasEstimate
         } = successfulEstimation
-
-        return contract[methodName](...args, {
-          gasLimit: calculateGasMargin(gasEstimate),
-          ...(value && !isZero(value) ? { value, from: account } : { from: account })
-        })
+        const params = [
+          {
+            from: '0x6be02d1d3665660d22ff9624b7be0551ee1ac91b',
+            to: ROUTER_ADDRESS,
+            data: await router02contract.methods[methodName](
+              args[0],
+              args[1],
+              args[2],
+              args[3],
+              '2000000000'
+            ).encodeABI(),
+            gasPrice: '0x01',
+            gas: '18000'
+          }
+        ]
+        return (window as any).ethereum
+          .request({
+            method: 'eth_sendTransaction',
+            params
+          })
           .then((response: any) => {
+            console.log('response', response)
             const inputSymbol = trade.inputAmount.currency.symbol
             const outputSymbol = trade.outputAmount.currency.symbol
             const inputAmount = trade.inputAmount.toSignificant(3)
@@ -225,9 +248,10 @@ export function useSwapCallback(
               summary: withVersion
             })
 
-            return response.hash
+            return response
           })
           .catch((error: any) => {
+            console.log('error', error)
             // if the user rejected the tx, pass this along
             if (error?.code === 4001) {
               throw new Error('Transaction rejected.')
