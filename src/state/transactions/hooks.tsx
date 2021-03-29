@@ -27,9 +27,13 @@ export function useTransactionAdder(): (
       if (!account) return
       if (!chainId) return
 
-      const { hash } = response
+      let { hash } = response
       if (!hash) {
-        throw Error('No transaction hash found.')
+        if(typeof response === 'string') {
+          hash = response
+        } else {
+          throw Error('No transaction hash found.')
+        }
       }
       dispatch(addTransaction({ hash, from: account, chainId, approval, summary, claim }))
     },
