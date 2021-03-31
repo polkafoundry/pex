@@ -1,25 +1,22 @@
-import { BigNumber } from '@ethersproject/bignumber'
+// import { BigNumber } from '@ethersproject/bignumber'
 import { Contract } from '@ethersproject/contracts'
 import { JSBI, Percent, Router, SwapParameters, Trade, TradeType } from '@uniswap/sdk'
 import { useMemo } from 'react'
 import { BIPS_BASE, INITIAL_ALLOWED_SLIPPAGE, ROUTER_ADDRESS } from '../constants'
 import { getTradeVersion, useV1TradeExchangeAddress } from '../data/V1'
 import { useTransactionAdder } from '../state/transactions/hooks'
-import { getRouterContract, isAddress, shortenAddress } from '../utils'
-import isZero from '../utils/isZero'
+import {
+  getRouterContract
+  // , isAddress, shortenAddress
+} from '../utils'
+// import isZero from '../utils/isZero'
 import v1SwapArguments from '../utils/v1SwapArguments'
 import { useActiveWeb3React } from './index'
-import { useV1ExchangeContract } from './useContract'
+import {useRouterContract, useV1ExchangeContract} from './useContract'
 import useTransactionDeadline from './useTransactionDeadline'
 import useENS from './useENS'
 import { Version } from './useToggledVersion'
-import Web3 from 'web3'
-import UniswapRouter02 from '@uniswap/v2-periphery/build/UniswapV2Router02.json'
-
-const web3 = new Web3(`http://54.169.215.160:9933`)
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-// @ts-ignore
-const router02contract = new web3.eth.Contract(UniswapRouter02.abi, ROUTER_ADDRESS)
+import Web3 from "web3";
 
 export enum SwapCallbackState {
   INVALID,
@@ -32,17 +29,17 @@ interface SwapCall {
   parameters: SwapParameters
 }
 
-interface SuccessfulCall {
-  call: SwapCall
-  gasEstimate: BigNumber
-}
+// interface SuccessfulCall {
+//   call: SwapCall
+//   gasEstimate: BigNumber
+// }
+//
+// interface FailedCall {
+//   call: SwapCall
+//   error: Error
+// }
 
-interface FailedCall {
-  call: SwapCall
-  error: Error
-}
-
-type EstimatedSwapCall = SuccessfulCall | FailedCall
+// type EstimatedSwapCall = SuccessfulCall | FailedCall
 
 /**
  * Returns the swap calls that can be used to make the trade
@@ -127,6 +124,8 @@ export function useSwapCallback(
   const { address: recipientAddress } = useENS(recipientAddressOrName)
   const recipient = recipientAddressOrName === null ? account : recipientAddress
 
+  const router02contract = useRouterContract()
+
   return useMemo(() => {
     if (!trade || !library || !account || !chainId) {
       return { state: SwapCallbackState.INVALID, callback: null, error: 'Missing dependencies' }
@@ -139,128 +138,154 @@ export function useSwapCallback(
       }
     }
 
-    const tradeVersion = getTradeVersion(trade)
+    // const tradeVersion = getTradeVersion(trade)
 
     return {
       state: SwapCallbackState.VALID,
       callback: async function onSwap(): Promise<string> {
-        const estimatedCalls: EstimatedSwapCall[] = await Promise.all(
-          swapCalls.map(call => {
-            const {
-              parameters: { methodName, args, value },
-              contract
-            } = call
-            const options = !value || isZero(value) ? {} : { value }
-
-            return contract.estimateGas[methodName](...args, options)
-              .then(gasEstimate => {
-                return {
-                  call,
-                  gasEstimate
-                }
-              })
-              .catch(gasError => {
-                console.debug('Gas estimate failed, trying eth_call to extract error', call)
-
-                return contract.callStatic[methodName](...args, options)
-                  .then(result => {
-                    console.debug('Unexpected successful call after failed estimate gas', call, gasError, result)
-                    return { call, error: new Error('Unexpected issue with estimating the gas. Please try again.') }
-                  })
-                  .catch(callError => {
-                    console.debug('Call threw error', call, callError)
-                    let errorMessage: string
-                    switch (callError.reason) {
-                      case 'UniswapV2Router: INSUFFICIENT_OUTPUT_AMOUNT':
-                      case 'UniswapV2Router: EXCESSIVE_INPUT_AMOUNT':
-                        errorMessage =
-                          'This transaction will not succeed either due to price movement or fee on transfer. Try increasing your slippage tolerance.'
-                        break
-                      default:
-                        errorMessage = `The transaction cannot succeed due to error: ${callError.reason}. This is probably an issue with one of the tokens you are swapping.`
-                    }
-                    return { call, error: new Error(errorMessage) }
-                  })
-              })
-          })
-        )
-
-        // a successful estimation is a bignumber gas estimate and the next call is also a bignumber gas estimate
-        const successfulEstimation = estimatedCalls.find(
-          (el, ix, list): el is SuccessfulCall =>
-            'gasEstimate' in el && (ix === list.length - 1 || 'gasEstimate' in list[ix + 1])
-        )
-
-        if (!successfulEstimation) {
-          const errorCalls = estimatedCalls.filter((call): call is FailedCall => 'error' in call)
-          if (errorCalls.length > 0) throw errorCalls[errorCalls.length - 1].error
-          throw new Error('Unexpected error. Please contact support: none of the calls threw an error')
-        }
+        // const estimatedCalls: EstimatedSwapCall[] = await Promise.all(
+        //   swapCalls.map(call => {
+        //     const {
+        //       parameters: { methodName, args, value },
+        //       contract
+        //     } = call
+        //     const options = !value || isZero(value) ? {} : { value }
+        //
+        //     return contract.estimateGas[methodName](...args, options)
+        //       .then(gasEstimate => {
+        //         return {
+        //           call,
+        //           gasEstimate
+        //         }
+        //       })
+        //       .catch(gasError => {
+        //         console.debug('Gas estimate failed, trying eth_call to extract error', call)
+        //
+        //         return contract.callStatic[methodName](...args, options)
+        //           .then(result => {
+        //             console.debug('Unexpected successful call after failed estimate gas', call, gasError, result)
+        //             return { call, error: new Error('Unexpected issue with estimating the gas. Please try again.') }
+        //           })
+        //           .catch(callError => {
+        //             console.debug('Call threw error', call, callError)
+        //             let errorMessage: string
+        //             switch (callError.reason) {
+        //               case 'UniswapV2Router: INSUFFICIENT_OUTPUT_AMOUNT':
+        //               case 'UniswapV2Router: EXCESSIVE_INPUT_AMOUNT':
+        //                 errorMessage =
+        //                   'This transaction will not succeed either due to price movement or fee on transfer. Try increasing your slippage tolerance.'
+        //                 break
+        //               default:
+        //                 errorMessage = `The transaction cannot succeed due to error: ${callError.reason}. This is probably an issue with one of the tokens you are swapping.`
+        //             }
+        //             return { call, error: new Error(errorMessage) }
+        //           })
+        //       })
+        //   })
+        // )
+        //
+        // // a successful estimation is a bignumber gas estimate and the next call is also a bignumber gas estimate
+        // const successfulEstimation = estimatedCalls.find(
+        //   (el, ix, list): el is SuccessfulCall =>
+        //     'gasEstimate' in el && (ix === list.length - 1 || 'gasEstimate' in list[ix + 1])
+        // )
+        //
+        // if (!successfulEstimation) {
+        //   const errorCalls = estimatedCalls.filter((call): call is FailedCall => 'error' in call)
+        //   if (errorCalls.length > 0) throw errorCalls[errorCalls.length - 1].error
+        //   throw new Error('Unexpected error. Please contact support: none of the calls threw an error')
+        // }
+        //
+        // const {
+        //   call: {
+        //     // contract,
+        //     parameters: { methodName, args, value }
+        //   },
+        //   // gasEstimate
+        // } = successfulEstimation
+        // const params = [
+        //   {
+        //     from: account.toString(),
+        //     to: ROUTER_ADDRESS,
+        //     data: await router02contract.methods[methodName](
+        //       ...args.slice(0, args.length-1),
+        //       '2000000000'
+        //     ).encodeABI(),
+        //     value,
+        //     gasPrice: '0x01',
+        //     gas: '6721975'
+        //   }
+        // ]
 
         const {
-          call: {
-            // contract,
-            parameters: { methodName, args, value }
-          },
-          // gasEstimate
-        } = successfulEstimation
-        const params = [
-          {
-            from: '0x6be02d1d3665660d22ff9624b7be0551ee1ac91b',
-            to: ROUTER_ADDRESS,
-            data: await router02contract.methods[methodName](
-              args[0],
-              args[1],
-              args[2],
-              args[3],
-              '2000000000'
-            ).encodeABI(),
-            gasPrice: '0x01',
-            gas: '18000'
-          }
-        ]
-        return (window as any).ethereum
-          .request({
-            method: 'eth_sendTransaction',
-            params
-          })
-          .then((response: any) => {
-            console.log('response', response)
-            const inputSymbol = trade.inputAmount.currency.symbol
-            const outputSymbol = trade.outputAmount.currency.symbol
-            const inputAmount = trade.inputAmount.toSignificant(3)
-            const outputAmount = trade.outputAmount.toSignificant(3)
+          parameters: { methodName, args, value }
+        } = swapCalls[0]
 
-            const base = `Swap ${inputAmount} ${inputSymbol} for ${outputAmount} ${outputSymbol}`
-            const withRecipient =
-              recipient === account
-                ? base
-                : `${base} to ${
-                    recipientAddressOrName && isAddress(recipientAddressOrName)
-                      ? shortenAddress(recipientAddressOrName)
-                      : recipientAddressOrName
-                  }`
+        const web3 = new Web3(Web3.givenProvider)
 
-            const withVersion =
-              tradeVersion === Version.v2 ? withRecipient : `${withRecipient} on ${(tradeVersion as any).toUpperCase()}`
+        const gasLimit = (await web3.eth.getBlock("latest")).gasLimit;
 
-            addTransaction(response, {
-              summary: withVersion
-            })
+        const params = {
+          from: account.toString(),
+          to: ROUTER_ADDRESS,
+          data: await router02contract.methods[methodName](
+            ...args.slice(0, args.length-1),
+            '2000000000'
+          ).encodeABI(),
+          value,
+          gasPrice: '0x01',
+          gasLimit: gasLimit
+        }
 
-            return response
-          })
-          .catch((error: any) => {
-            console.log('error', error)
-            // if the user rejected the tx, pass this along
-            if (error?.code === 4001) {
-              throw new Error('Transaction rejected.')
-            } else {
-              // otherwise, the error was unexpected and we need to convey that
-              console.error(`Swap failed`, error, methodName, args, value)
-              throw new Error(`Swap failed: ${error.message}`)
-            }
-          })
+        return web3.eth.sendTransaction(params)
+          .then((recipient: any) => {
+          return recipient?.transactionHash
+        }).catch(err => {
+          console.error(err)
+        })
+
+
+        // return (window as any).ethereum
+        //   .request({
+        //     method: 'eth_sendTransaction',
+        //     params
+        //   })
+        //   .then((response: any) => {
+        //     const inputSymbol = trade.inputAmount.currency.symbol
+        //     const outputSymbol = trade.outputAmount.currency.symbol
+        //     const inputAmount = trade.inputAmount.toSignificant(3)
+        //     const outputAmount = trade.outputAmount.toSignificant(3)
+        //
+        //     const base = `Swap ${inputAmount} ${inputSymbol} for ${outputAmount} ${outputSymbol}`
+        //     const withRecipient =
+        //       recipient === account
+        //         ? base
+        //         : `${base} to ${
+        //             recipientAddressOrName && isAddress(recipientAddressOrName)
+        //               ? shortenAddress(recipientAddressOrName)
+        //               : recipientAddressOrName
+        //           }`
+        //
+        //     const withVersion =
+        //       tradeVersion === Version.v2 ? withRecipient : `${withRecipient} on ${(tradeVersion as any).toUpperCase()}`
+        //
+        //     addTransaction(response, {
+        //       summary: withVersion
+        //     })
+        //
+        //     return response
+        //   })
+        //   .catch((error: any) => {
+        //     console.log('error', error)
+        //     // if the user rejected the tx, pass this along
+        //     if (error?.code === 4001) {
+        //       throw new Error('Transaction rejected.')
+        //     } else {
+        //       // otherwise, the error was unexpected and we need to convey that
+        //       console.error(`Swap failed`, error, methodName, args, value)
+        //       throw new Error(`Swap failed: ${error.message}`)
+        //     }
+        //   })
       },
       error: null
     }

@@ -37,7 +37,7 @@ import { TYPE } from '../../theme'
 import {
   // calculateGasMargin,
   calculateSlippageAmount
-  ,getRouterContract
+  // ,getRouterContract
 } from '../../utils'
 import { maxAmountSpend } from '../../utils/maxAmountSpend'
 import { wrappedCurrency } from '../../utils/wrappedCurrency'
@@ -48,7 +48,10 @@ import { currencyId } from '../../utils/currencyId'
 import { PoolPriceBar } from './PoolPriceBar'
 import { useIsTransactionUnsupported } from 'hooks/Trades'
 import UnsupportedCurrencyFooter from 'components/swap/UnsupportedCurrencyFooter'
-import {useRouterContract, useV2FactoryContract} from "../../hooks/useContract";
+import {
+  useRouterContract
+  // , useV2FactoryContract
+} from "../../hooks/useContract";
 import Web3 from "web3";
 
 export default function AddLiquidity({
@@ -136,14 +139,11 @@ export default function AddLiquidity({
   // const addTransaction = useTransactionAdder()
   const routerContract = useRouterContract()
   const web3 = new Web3(Web3.givenProvider);
-  const factoryContract = useV2FactoryContract()
+  // const factoryContract = useV2FactoryContract()
 
   async function onAdd() {
     if (!chainId || !library || !account) return
-    const router = getRouterContract(chainId, library, account)
-    console.log(router)
     const gasLimit = (await web3.eth.getBlock("latest")).gasLimit;
-    console.log('gas limit: ', gasLimit)
 
     const { [Field.CURRENCY_A]: parsedAmountA, [Field.CURRENCY_B]: parsedAmountB } = parsedAmounts
     if (!parsedAmountA || !parsedAmountB || !currencyA || !currencyB || !deadline) {
@@ -196,12 +196,8 @@ export default function AddLiquidity({
         gasPrice: '0x01',
         gas: gasLimit,
       }).on('transactionHash', (transactionHash) => {
-        console.log('hash: ', transactionHash)
         setAttemptingTxn(false)
         setTxHash(transactionHash)
-        onShow().then(res => {
-          console.log(res)
-        })
       }).on('error', (err) => {
         console.error(err)
       })
@@ -280,17 +276,17 @@ export default function AddLiquidity({
     //   })
   }
 
-  async function onShow() {
-    const pair = await factoryContract.methods.getPair(
-        wrappedCurrency(currencyA || undefined, chainId)?.address,
-        wrappedCurrency(currencyB || undefined, chainId)?.address
-    ).call();
-    console.log('pair', pair)
-    const UniswapV2Pair = require('@uniswap/v2-core/build/UniswapV2Pair.json');
-    const pairContract = new web3.eth.Contract(UniswapV2Pair.abi, pair);
-    const reserves = await pairContract.methods.getReserves().call();
-    console.log('reserves', reserves)
-  }
+  // async function onShow() {
+  //   const pair = await factoryContract.methods.getPair(
+  //       wrappedCurrency(currencyA || undefined, chainId)?.address,
+  //       wrappedCurrency(currencyB || undefined, chainId)?.address
+  //   ).call();
+  //   console.log('pair', pair)
+  //   const UniswapV2Pair = require('@uniswap/v2-core/build/UniswapV2Pair.json');
+  //   const pairContract = new web3.eth.Contract(UniswapV2Pair.abi, pair);
+  //   const reserves = await pairContract.methods.getReserves().call();
+  //   console.log('reserves', reserves)
+  // }
 
   const modalHeader = () => {
     return noLiquidity ? (
