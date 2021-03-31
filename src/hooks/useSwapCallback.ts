@@ -4,7 +4,7 @@ import { JSBI, Percent, Router, SwapParameters, Trade, TradeType } from '@uniswa
 import { useMemo } from 'react'
 import { BIPS_BASE, INITIAL_ALLOWED_SLIPPAGE, ROUTER_ADDRESS } from '../constants'
 import { getTradeVersion, useV1TradeExchangeAddress } from '../data/V1'
-import { useTransactionAdder } from '../state/transactions/hooks'
+// import { useTransactionAdder } from '../state/transactions/hooks'
 import {
   getRouterContract
   // , isAddress, shortenAddress
@@ -119,7 +119,7 @@ export function useSwapCallback(
 
   const swapCalls = useSwapCallArguments(trade, allowedSlippage, recipientAddressOrName)
 
-  const addTransaction = useTransactionAdder()
+  // const addTransaction = useTransactionAdder()
 
   const { address: recipientAddress } = useENS(recipientAddressOrName)
   const recipient = recipientAddressOrName === null ? account : recipientAddress
@@ -289,5 +289,5 @@ export function useSwapCallback(
       },
       error: null
     }
-  }, [trade, library, account, chainId, recipient, recipientAddressOrName, swapCalls, addTransaction, router02contract])
+  }, [trade, library, account, chainId, recipient, recipientAddressOrName, swapCalls, router02contract])
 }
