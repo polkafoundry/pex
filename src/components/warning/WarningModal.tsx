@@ -29,9 +29,25 @@ const Title = styled.div`
 `
 
 const Subtitle = styled.div`
+  font-size: 13.5px;
+  line-height: 18px;
   margin-top: 12px;
   text-align: center;
 `
+
+const Paragraph = styled.p`
+  margin-top: 4px;
+  margin-bottom: 4px;
+`
+
+function Link(props: any) {
+  return (
+    <a style={{outline: "none"}}
+       href={props.href}
+       target="_blank"
+       rel="noopener noreferrer">{props.title}</a>
+  )
+}
 
 export default function WarningModal() {
 
@@ -44,19 +60,18 @@ export default function WarningModal() {
           <CloseColor/>
         </CloseIcon>
         <Title>
-          This is an Uniswap app built on <a style={{outline: "none"}}
-                                             href="https://polkafoundry.com/"
-                                             target="_blank"
-                                             rel="noopener noreferrer">Polkafoundry</a>.
+          <Paragraph>Polkex is an Uniswap clone on <Link href="https://polkafoundry.com/" title="Polkafoundry"/> testnet.</Paragraph>
+          <Paragraph style={{fontSize: '16px'}}>Currently, it support only ETH-PKF pair.</Paragraph>
         </Title>
         <Subtitle>
-          If you want to try it, please set up your Metamask RPC like this:
+          You will have to setup MetaMask's Custom RPC before using Polkex. From the MetaMask's 'Networks' dropdown, choose 'Custom RPC' and input the following info:
         </Subtitle>
-        <ul>
-          <li>Network name: Halongbay</li>
-          <li>RPC URL: http://54.169.215.160:9933</li>
+        <ul style={{fontSize: '13.5px', marginTop: '8px'}}>
+          <li>Network name: PolkaFoundry</li>
+          <li>RPC URL: https://halongbay.polkafoundry.com</li>
           <li>Chain ID: 13</li>
         </ul>
+        <Paragraph style={{fontSize: '12px', color: '#747474'}}>Please refer <Link href="" title="here"/> for introduction and further instruction. To get some funds for your trial, please click <Link href="" title="here"/>.</Paragraph>
       </Wrapper>
     </Modal>
   )
