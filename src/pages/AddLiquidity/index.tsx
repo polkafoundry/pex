@@ -158,23 +158,28 @@ export default function AddLiquidity({
 
     if(currencyA === ETHER || currencyB === ETHER) {
       const tokenAisEther = currencyA === ETHER
-      web3.eth.sendTransaction({
+      const config = {
         from: account?.toString(),
         to: ROUTER_ADDRESS,
         data: await routerContract.methods.addLiquidityETH(
-            tokenAisEther ? wrappedCurrency(currencyB, chainId)?.address : wrappedCurrency(currencyA, chainId)?.address,
-            tokenAisEther ? parsedAmountB.raw.toString() : parsedAmountA.raw.toString(),
-            tokenAisEther ? amountsMin[Field.CURRENCY_B].toString() : amountsMin[Field.CURRENCY_A].toString(),
-            tokenAisEther ? amountsMin[Field.CURRENCY_A].toString() : amountsMin[Field.CURRENCY_B].toString(),
-            account?.toString(),
-            '2000000000'
+          tokenAisEther ? wrappedCurrency(currencyB, chainId)?.address : wrappedCurrency(currencyA, chainId)?.address,
+          tokenAisEther ? parsedAmountB.raw.toString() : parsedAmountA.raw.toString(),
+          tokenAisEther ? amountsMin[Field.CURRENCY_B].toString() : amountsMin[Field.CURRENCY_A].toString(),
+          tokenAisEther ? amountsMin[Field.CURRENCY_A].toString() : amountsMin[Field.CURRENCY_B].toString(),
+          account?.toString(),
+          '2000000000'
         ).encodeABI(),
-        value: (10 ** 18).toString(),
+        value: tokenAisEther ? amountsMin[Field.CURRENCY_A].toString() : amountsMin[Field.CURRENCY_B].toString(),
         gasPrice: '0x01',
         gas: gasLimit,
-      }).on('transactionHash', (transactionHash) => {
+      }
+      console.log(config)
+      web3.eth.sendTransaction(config)
+        .on('transactionHash', (transactionHash) => {
         setAttemptingTxn(false)
         setTxHash(transactionHash)
+      }).on('receipt', (receipt) => {
+        console.log(receipt)
       }).on('error', (err) => {
         console.error(err)
       })

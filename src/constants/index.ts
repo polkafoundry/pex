@@ -6,9 +6,13 @@ import {
   injected
   // , portis, walletconnect, walletlink
 } from '../connectors'
-// 13
-export const ROUTER_ADDRESS = '0xF8cef78E923919054037a1D03662bBD884fF4edf'
-export const FACTORY_ADDRESS = '0x42e2EE7Ba8975c473157634Ac2AF4098190fc741'
+// 13 halongbay
+// export const ROUTER_ADDRESS = '0xF8cef78E923919054037a1D03662bBD884fF4edf'
+// export const FACTORY_ADDRESS = '0x42e2EE7Ba8975c473157634Ac2AF4098190fc741'
+// export const INIT_CODE_HASH = '0x96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f'
+//13 rococo
+export const ROUTER_ADDRESS = '0xDaD3d8d23e8C5DdA5Aadf1B7e9600845B07C8EBf'
+export const FACTORY_ADDRESS = '0x5e82Aff6Da7c57734c301f3398467F7007119c6e'
 export const INIT_CODE_HASH = '0x96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f'
 // 1337
 // export const ROUTER_ADDRESS = '0x679d1833FE324dcA723e5E7aA53D1a06E5224993'
@@ -16,11 +20,6 @@ export const INIT_CODE_HASH = '0x96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbe
 // export const INIT_CODE_HASH = '0x6ed8af27274742e9fc7f4cf02083fa21bfca1baf556e46f0e5670f2b772e059d'
 
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
-
-export const GENESIS_ACCOUNT = '0x6Be02d1d3665660d22FF9624b7BE0551ee1Ac91b'
-export const GENESIS_PRIVATE_KEY = '0x99B3C12287537E38C90A9219D4CB074A89A16E9CDB20BF85728EBD97C343E342'
-export const erc20Address = '0xC2Bf5F29a4384b1aB0C063e1c666f02121B6084a'
-export const wethAddress = '0x5c4242beB94dE30b922f57241f1D02f36e906915'
 
 export { PRELOADED_PROPOSALS } from './proposals'
 
@@ -41,7 +40,8 @@ export const WBTC = new Token(ChainId.MAINNET, '0x2260FAC5E5542a773Aa44fBCfeDf7C
 export const ERC20 = [
   new Token(1337, '0xf0b696D085724a01C23517B2c67564002FaF57d3', 18, 'PKF', 'Polkafoundry'),
   new Token(1337, '0x93976Bd382C7A66140e7B01D4506e1D757a593BA', 18, 'TEST', 'TEST Coin'),
-  new Token(13, '0xC2Bf5F29a4384b1aB0C063e1c666f02121B6084a', 18, 'PKF', 'Polkafoundry'),
+  // new Token(13, '0xC2Bf5F29a4384b1aB0C063e1c666f02121B6084a', 18, 'PKF', 'Polkafoundry'), // halongbay
+  new Token(13, '0xDFEA8Ae8228d89e6a2480f5D24C4100171CfD34e', 18, 'PKF', 'Polkafoundry'), //rococo
   new Token(13, '0xBb0CC0fb3e0c06725c67167501f850B4900D6DB5', 18, 'TEA', 'Tea Coin')
 ]
 export const fixedPairAddress = '0xBD6DC64A08bE60299Ba17958d8C9fD1423a4409D'
@@ -52,7 +52,8 @@ export const WETH_TEST = {
   [ChainId.ROPSTEN]: WETH[ChainId.ROPSTEN],
   [ChainId.GÖRLI]: WETH[ChainId.GÖRLI],
   [ChainId.KOVAN]: WETH[ChainId.KOVAN],
-  13: new Token(13, '0x5c4242beB94dE30b922f57241f1D02f36e906915', 18, 'WETH', 'Wrapped Ether'),
+  // 13: new Token(13, '0x5c4242beB94dE30b922f57241f1D02f36e906915', 18, 'WETH', 'Wrapped Ether'), //halongbay
+  13: new Token(13, '0xE2b953Af0D76fF4a59a43b8C68Ac245883AcF596', 18, 'WETH', 'Wrapped Ether'), //rococo
   1337: new Token(1337, '0x72c6d57A055B24903Ae4E4cB0Da060e1c010E456', 18, 'WETH9', 'Wrapped Ether')
 }
 
