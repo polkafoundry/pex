@@ -40,6 +40,11 @@ const Paragraph = styled.p`
   margin-bottom: 4px;
 `
 
+interface ModalProps {
+  isOpen: boolean,
+  onClose: () => void,
+}
+
 function Link(props: any) {
   return (
     <a style={{outline: "none"}}
@@ -49,14 +54,12 @@ function Link(props: any) {
   )
 }
 
-export default function WarningModal() {
-
-  const [modal, setModal] = React.useState(true)
+export default function WarningModal({isOpen, onClose}: ModalProps) {
 
   return (
-    <Modal isOpen={modal} onDismiss={() => setModal(false)}>
+    <Modal isOpen={isOpen} onDismiss={() => onClose()}>
       <Wrapper>
-        <CloseIcon onClick={() => setModal(false)}>
+        <CloseIcon onClick={() => onClose()}>
           <CloseColor/>
         </CloseIcon>
         <Title>

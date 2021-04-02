@@ -19,7 +19,7 @@ import { TYPE
 } from '../../theme'
 
 import { YellowCard } from '../Card'
-import { Moon, Sun } from 'react-feather'
+import { Moon, Sun,  Info } from 'react-feather'
 // import Menu from '../Menu'
 
 import Row, { RowFixed } from '../Row'
@@ -32,6 +32,7 @@ import { Dots } from '../swap/styleds'
 import Modal from '../Modal'
 import UniBalanceContent from './UniBalanceContent'
 import usePrevious from '../../hooks/usePrevious'
+import WarningModal from "../warning/WarningModal";
 
 const HeaderFrame = styled.div`
   display: grid;
@@ -318,9 +319,12 @@ export default function Header() {
   const countUpValue = aggregateBalance?.toFixed(0) ?? '0'
   const countUpValuePrevious = usePrevious(countUpValue) ?? '0'
 
+  const [modal, setModal] = React.useState(true)
+
   return (
     <HeaderFrame>
       <ClaimModal />
+      <WarningModal isOpen={modal} onClose={() => setModal(false)}/>
       <Modal isOpen={showUniBalanceModal} onDismiss={() => setShowUniBalanceModal(false)}>
         <UniBalanceContent setShowUniBalanceModal={setShowUniBalanceModal} />
       </Modal>
@@ -413,6 +417,9 @@ export default function Header() {
         <HeaderElementWrap>
           <StyledMenuButton onClick={() => toggleDarkMode()}>
             {darkMode ? <Moon size={20} /> : <Sun size={20} />}
+          </StyledMenuButton>
+          <StyledMenuButton onClick={() => setModal(true)}>
+            <Info size={20}/>
           </StyledMenuButton>
           {/*<Menu />*/}
         </HeaderElementWrap>

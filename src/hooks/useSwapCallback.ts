@@ -229,8 +229,7 @@ export function useSwapCallback(
           from: account.toString(),
           to: ROUTER_ADDRESS,
           data: await router02contract.methods[methodName](
-            ...args.slice(0, args.length-1),
-            '2000000000'
+            ...args
           ).encodeABI(),
           value,
           gasPrice: '0x01',

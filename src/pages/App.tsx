@@ -30,7 +30,6 @@ import Swap from './Swap'
 import { OpenClaimAddressModalAndRedirectToSwap, RedirectPathToSwapOnly, RedirectToSwap } from './Swap/redirects'
 // import Vote from './Vote'
 // import VotePage from './Vote/VotePage'
-import WarningModal from "../components/warning/WarningModal";
 
 const AppWrapper = styled.div`
   display: flex;
@@ -81,7 +80,6 @@ export default function App() {
       <Route component={GoogleAnalyticsReporter} />
       <Route component={DarkModeQueryParamReader} />
       <AppWrapper>
-        <WarningModal/>
         <URLWarning />
         <HeaderWrapper>
           <Header />

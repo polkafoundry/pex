@@ -167,7 +167,7 @@ export default function AddLiquidity({
             tokenAisEther ? amountsMin[Field.CURRENCY_B].toString() : amountsMin[Field.CURRENCY_A].toString(),
             tokenAisEther ? amountsMin[Field.CURRENCY_A].toString() : amountsMin[Field.CURRENCY_B].toString(),
             account?.toString(),
-            '2000000000'
+            deadline.toHexString()
         ).encodeABI(),
         value: (10 ** 18).toString(),
         gasPrice: '0x01',
@@ -190,7 +190,7 @@ export default function AddLiquidity({
             amountsMin[Field.CURRENCY_A].toString(),
             amountsMin[Field.CURRENCY_B].toString(),
             account?.toString(),
-            '2000000000'
+            deadline.toHexString()
         ).encodeABI(),
         value: '0x00',
         gasPrice: '0x01',
