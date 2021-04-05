@@ -39,10 +39,10 @@ export const WBTC = new Token(ChainId.MAINNET, '0x2260FAC5E5542a773Aa44fBCfeDf7C
 
 
 export const ERC20 = [
-  new Token(1337, '0xf0b696D085724a01C23517B2c67564002FaF57d3', 18, 'PKF', 'Polkafoundry'),
-  new Token(1337, '0x93976Bd382C7A66140e7B01D4506e1D757a593BA', 18, 'TEST', 'TEST Coin'),
+  // new Token(1337, '0xf0b696D085724a01C23517B2c67564002FaF57d3', 18, 'PKF', 'Polkafoundry'),
+  // new Token(1337, '0x93976Bd382C7A66140e7B01D4506e1D757a593BA', 18, 'TEST', 'TEST Coin'),
   new Token(13, '0xC2Bf5F29a4384b1aB0C063e1c666f02121B6084a', 18, 'PKF', 'Polkafoundry'),
-  new Token(13, '0xBb0CC0fb3e0c06725c67167501f850B4900D6DB5', 18, 'TEA', 'Tea Coin')
+  // new Token(13, '0xBb0CC0fb3e0c06725c67167501f850B4900D6DB5', 18, 'TEA', 'Tea Coin')
 ]
 export const fixedPairAddress = '0xBD6DC64A08bE60299Ba17958d8C9fD1423a4409D'
 
