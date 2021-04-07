@@ -155,53 +155,53 @@ export default function AddLiquidity({
       [Field.CURRENCY_B]: calculateSlippageAmount(parsedAmountB, noLiquidity ? 0 : allowedSlippage)[0]
     }
     setAttemptingTxn(true)
+    let data, config
 
     if(currencyA === ETHER || currencyB === ETHER) {
       const tokenAisEther = currencyA === ETHER
-      web3.eth.sendTransaction({
+      data = await routerContract.methods.addLiquidityETH(
+        tokenAisEther ? wrappedCurrency(currencyB, chainId)?.address : wrappedCurrency(currencyA, chainId)?.address,
+        tokenAisEther ? parsedAmountB.raw.toString() : parsedAmountA.raw.toString(),
+        tokenAisEther ? amountsMin[Field.CURRENCY_B].toString() : amountsMin[Field.CURRENCY_A].toString(),
+        tokenAisEther ? amountsMin[Field.CURRENCY_A].toString() : amountsMin[Field.CURRENCY_B].toString(),
+        account?.toString(),
+        deadline.toHexString()
+      ).encodeABI()
+      config = {
         from: account?.toString(),
         to: ROUTER_ADDRESS,
-        data: await routerContract.methods.addLiquidityETH(
-            tokenAisEther ? wrappedCurrency(currencyB, chainId)?.address : wrappedCurrency(currencyA, chainId)?.address,
-            tokenAisEther ? parsedAmountB.raw.toString() : parsedAmountA.raw.toString(),
-            tokenAisEther ? amountsMin[Field.CURRENCY_B].toString() : amountsMin[Field.CURRENCY_A].toString(),
-            tokenAisEther ? amountsMin[Field.CURRENCY_A].toString() : amountsMin[Field.CURRENCY_B].toString(),
-            account?.toString(),
-            deadline.toHexString()
-        ).encodeABI(),
+        data,
         value: tokenAisEther ? amountsMin[Field.CURRENCY_A].toString() : amountsMin[Field.CURRENCY_B].toString(),
         gasPrice: '0x01',
         gas: gasLimit,
-      }).on('transactionHash', (transactionHash) => {
-        setAttemptingTxn(false)
-        setTxHash(transactionHash)
-      }).on('error', (err) => {
-        console.error(err)
-      })
+      }
     } else {
-      web3.eth.sendTransaction({
+      data = await routerContract.methods.addLiquidity(
+        wrappedCurrency(currencyA, chainId)?.address,
+        wrappedCurrency(currencyB, chainId)?.address,
+        parsedAmountA.raw.toString(),
+        parsedAmountB.raw.toString(),
+        amountsMin[Field.CURRENCY_A].toString(),
+        amountsMin[Field.CURRENCY_B].toString(),
+        account?.toString(),
+        deadline.toHexString()
+      ).encodeABI()
+      config = {
         from: account?.toString(),
         to: ROUTER_ADDRESS,
-        data: await routerContract.methods.addLiquidity(
-            wrappedCurrency(currencyA, chainId)?.address,
-            wrappedCurrency(currencyB, chainId)?.address,
-            parsedAmountA.raw.toString(),
-            parsedAmountB.raw.toString(),
-            amountsMin[Field.CURRENCY_A].toString(),
-            amountsMin[Field.CURRENCY_B].toString(),
-            account?.toString(),
-            deadline.toHexString()
-        ).encodeABI(),
+        data,
         value: '0x00',
         gasPrice: '0x01',
         gas: gasLimit,
-      }).on('transactionHash', (transactionHash) => {
-        setAttemptingTxn(false)
-        setTxHash(transactionHash)
-      }).on('error', (err) => {
-        console.error(err)
-      })
+      }
     }
+
+    web3.eth.sendTransaction(config).then((receipt: any) => {
+      setAttemptingTxn(false)
+      setTxHash(receipt.transactionHash)
+    }).catch((error: any) => {
+      console.error(error)
+    })
 
     // let estimate,
     //   method: (...args: any) => Promise<TransactionResponse>,
