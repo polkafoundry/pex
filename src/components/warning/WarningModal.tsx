@@ -74,7 +74,7 @@ export default function WarningModal({isOpen, onClose}: ModalProps) {
           <li>RPC URL: https://halongbay.polkafoundry.com</li>
           <li>Chain ID: 13</li>
         </ul>
-        <Paragraph style={{fontSize: '12px', color: '#747474'}}>Please refer <Link href="" title="here"/> for introduction and further instruction. To get some ETH funds for your trial, please click <Link href="https://t.me/pkf_faucet_bot" title="here"/>.</Paragraph>
+        <Paragraph style={{fontSize: '12px', color: '#747474'}}>Please refer <Link href="https://medium.com/polkafoundry/introducing-pex-exchange-demo-a-port-of-uniswap-on-polkafoundry-testnet-9225233f9373" title="here"/> for introduction and further instruction. To get some ETH funds for your trial, please click <Link href="https://t.me/pkf_faucet_bot" title="here"/>.</Paragraph>
       </Wrapper>
     </Modal>
   )
