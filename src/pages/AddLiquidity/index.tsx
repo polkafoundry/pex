@@ -169,7 +169,7 @@ export default function AddLiquidity({
             account?.toString(),
             deadline.toHexString()
         ).encodeABI(),
-        value: (10 ** 18).toString(),
+        value: tokenAisEther ? amountsMin[Field.CURRENCY_A].toString() : amountsMin[Field.CURRENCY_B].toString(),
         gasPrice: '0x01',
         gas: gasLimit,
       }).on('transactionHash', (transactionHash) => {
