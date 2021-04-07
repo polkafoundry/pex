@@ -159,15 +159,6 @@ export default function AddLiquidity({
 
     if(currencyA === ETHER || currencyB === ETHER) {
       const tokenAisEther = currencyA === ETHER
-      console.log(
-        tokenAisEther ? parsedAmountB.raw.toString() : parsedAmountA.raw.toString(),
-      )
-      console.log(
-        tokenAisEther ? amountsMin[Field.CURRENCY_B].toString() : amountsMin[Field.CURRENCY_A].toString(),
-      )
-      console.log(
-        tokenAisEther ? amountsMin[Field.CURRENCY_A].toString() : amountsMin[Field.CURRENCY_B].toString(),
-      )
       data = await routerContract.methods.addLiquidityETH(
         tokenAisEther ? wrappedCurrency(currencyB, chainId)?.address : wrappedCurrency(currencyA, chainId)?.address,
         tokenAisEther ? parsedAmountB.raw.toString() : parsedAmountA.raw.toString(),
@@ -204,8 +195,6 @@ export default function AddLiquidity({
         gas: gasLimit,
       }
     }
-
-    console.log(config)
 
     web3.eth.sendTransaction(config).then((receipt: any) => {
       setAttemptingTxn(false)
@@ -443,7 +432,7 @@ export default function AddLiquidity({
                         <b>Tip:</b> When you add liquidity, you will receive pool tokens representing your position.
                         These tokens automatically earn fees proportional to your share of the pool, and can be redeemed
                         at any time.
-                        <p style={{margin: '4px 0'}}><b>Note*: </b><i>Please select and enter the amount of ETH first.</i></p>
+                        <p style={{margin: '4px 0', color: '#9e9e9e'}}><b>Note*: </b><i>Please select and enter the amount of ETH first.</i></p>
                       </TYPE.link>
                     </AutoColumn>
                   </BlueCard>

@@ -1,5 +1,5 @@
-import {Currency, ETHER, Pair} from '@uniswap/sdk'
-import React, {useState, useCallback, useEffect} from 'react'
+import {Currency, Pair} from '@uniswap/sdk'
+import React, {useState, useCallback} from 'react'
 import styled from 'styled-components'
 import { darken } from 'polished'
 import { useCurrencyBalance } from '../../state/wallet/hooks'
@@ -161,14 +161,6 @@ export default function CurrencyInputPanel({
     setModalOpen(false)
   }, [setModalOpen])
 
-  const [disabledInput, setDisabledInput] = useState(false)
-
-  useEffect(() => {
-    if(currency !== ETHER) {
-      setDisabledInput(true)
-    }
-  }, [currency])
-
   return (
     <InputPanel id={id}>
       <Container hideInput={hideInput}>
@@ -198,7 +190,6 @@ export default function CurrencyInputPanel({
           {!hideInput && (
             <>
               <NumericalInput
-                disabled={disabledInput}
                 className="token-amount-input"
                 value={value}
                 onUserInput={val => {
