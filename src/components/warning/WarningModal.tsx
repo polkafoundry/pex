@@ -67,7 +67,7 @@ export default function WarningModal({isOpen, onClose}: ModalProps) {
           <Paragraph style={{fontSize: '16px'}}>Currently, it supports only ETH-PKF pair.</Paragraph>
         </Title>
         <Subtitle>
-          You will have to setup MetaMask's Custom RPC before using Polkex. From the MetaMask's 'Networks' dropdown, choose 'Custom RPC' and input the following info:
+          You will have to setup MetaMask's Custom RPC before using PEX. From the MetaMask's 'Networks' dropdown, choose 'Custom RPC' and input the following info:
         </Subtitle>
         <ul style={{fontSize: '13.5px', marginTop: '8px'}}>
           <li>Network name: PolkaFoundry</li>
