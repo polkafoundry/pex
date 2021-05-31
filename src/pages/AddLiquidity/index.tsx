@@ -168,7 +168,7 @@ export default function AddLiquidity({
       gasPrice: '0x01',
       gas: gasLimit,
     }).then(() => {
-      if(type = 'A') {
+      if(type === 'A') {
         approvalA = ApprovalState.APPROVED
       } else {
         approvalB = ApprovalState.APPROVED
@@ -177,7 +177,7 @@ export default function AddLiquidity({
       setAttemptingTxn(false)
       setAction('Supplying')
     }).catch((error: any) => {
-      if(type = 'A') {
+      if(type === 'A') {
         approvalA = ApprovalState.NOT_APPROVED
       } else {
         approvalB = ApprovalState.NOT_APPROVED
