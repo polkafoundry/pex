@@ -133,14 +133,61 @@ export default function AddLiquidity({
   )
 
   // check whether the user has approved the router on the tokens
-  const [approvalA, approveACallback] = useApproveCallback(parsedAmounts[Field.CURRENCY_A], ROUTER_ADDRESS)
-  const [approvalB, approveBCallback] = useApproveCallback(parsedAmounts[Field.CURRENCY_B], ROUTER_ADDRESS)
+  let [approvalA] = useApproveCallback(parsedAmounts[Field.CURRENCY_A], ROUTER_ADDRESS)
+  let [approvalB] = useApproveCallback(parsedAmounts[Field.CURRENCY_B], ROUTER_ADDRESS)
 
   // const addTransaction = useTransactionAdder()
   const routerContract = useRouterContract()
   const web3 = new Web3(Web3.givenProvider);
   // const factoryContract = useV2FactoryContract()
+  const ERC20_ABI = require('../../constants/abis/erc20.json')
+  const [action, setAction] = useState('Supplying')
 
+  async function onApprove(type: string) {
+    if(!account || !currencyA || !currencyB) return
+    let amount, tokenAddress
+    setAction('Approving')
+    setAttemptingTxn(true)
+    if(type === 'A') {
+      amount = parsedAmounts[Field.CURRENCY_A]?.raw.toString()
+      tokenAddress = wrappedCurrency(currencyA, chainId)?.address
+      approvalA = ApprovalState.PENDING
+    } else {
+      amount = parsedAmounts[Field.CURRENCY_B]?.raw.toString()
+      tokenAddress = wrappedCurrency(currencyB, chainId)?.address
+      approvalB = ApprovalState.PENDING
+    }
+    setShowConfirm(true)
+    const gasLimit = (await web3.eth.getBlock("latest")).gasLimit;
+    const tokenContract = new web3.eth.Contract(ERC20_ABI, tokenAddress)
+    web3.eth.sendTransaction({
+      from: account?.toString(),
+      to: tokenAddress,
+      data: await tokenContract.methods.approve(ROUTER_ADDRESS, amount).encodeABI(),
+      value: '0x00',
+      gasPrice: '0x01',
+      gas: gasLimit,
+    }).then(() => {
+      if(type = 'A') {
+        approvalA = ApprovalState.APPROVED
+      } else {
+        approvalB = ApprovalState.APPROVED
+      }
+      setShowConfirm(false)
+      setAttemptingTxn(false)
+      setAction('Supplying')
+    }).catch((error: any) => {
+      if(type = 'A') {
+        approvalA = ApprovalState.NOT_APPROVED
+      } else {
+        approvalB = ApprovalState.NOT_APPROVED
+      }
+      setShowConfirm(false)
+      setAttemptingTxn(false)
+      setAction('Supplying')
+      console.error(error)
+    })
+  }
   async function onAdd() {
     if (!chainId || !library || !account) return
     const gasLimit = (await web3.eth.getBlock("latest")).gasLimit;
@@ -200,6 +247,7 @@ export default function AddLiquidity({
       setAttemptingTxn(false)
       setTxHash(receipt.transactionHash)
     }).catch((error: any) => {
+      setAttemptingTxn(false)
       console.error(error)
     })
 
@@ -342,7 +390,7 @@ export default function AddLiquidity({
     )
   }
 
-  const pendingText = `Supplying ${parsedAmounts[Field.CURRENCY_A]?.toSignificant(6)} ${
+  let pendingText = `${action} ${parsedAmounts[Field.CURRENCY_A]?.toSignificant(6)} ${
     currencies[Field.CURRENCY_A]?.symbol
   } and ${parsedAmounts[Field.CURRENCY_B]?.toSignificant(6)} ${currencies[Field.CURRENCY_B]?.symbol}`
 
@@ -501,7 +549,7 @@ export default function AddLiquidity({
                     <RowBetween>
                       {approvalA !== ApprovalState.APPROVED && (
                         <ButtonPrimary
-                          onClick={approveACallback}
+                          onClick={() => {onApprove('A')}}
                           disabled={approvalA === ApprovalState.PENDING}
                           width={approvalB !== ApprovalState.APPROVED ? '48%' : '100%'}
                         >
@@ -514,7 +562,7 @@ export default function AddLiquidity({
                       )}
                       {approvalB !== ApprovalState.APPROVED && (
                         <ButtonPrimary
-                          onClick={approveBCallback}
+                          onClick={() => {onApprove('B')}}
                           disabled={approvalB === ApprovalState.PENDING}
                           width={approvalA !== ApprovalState.APPROVED ? '48%' : '100%'}
                         >
